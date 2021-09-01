@@ -1,0 +1,11 @@
+{
+	"id":1,
+	"name":"Tom",
+	"address":
+		{
+			"city":"Mumbai",
+			"state":"Maharashtra",
+			"postalCode":401103
+		},
+	"telecom":9852654189
+}

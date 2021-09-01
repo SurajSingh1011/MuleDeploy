@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce Config" doc:id="8e21eeaa-aeff-49ba-abcd-ae9d66554863" >
+		<salesforce:basic-connection username="suraj-kumar.a.singh-9zkv@force.com" password="Sur@j_123" securityToken="xwkS80hemHCKnSAJRnQE1YfFh" url="https://login.salesforce.com/services/Soap/u/51.0" />
+	</salesforce:sfdc-config>
+	<flow name="getpatient" doc:id="42aa23e5-1335-4642-86ab-7145d3ef007a" >
+		<salesforce:query doc:name="Query" doc:id="d3dfeb88-f48e-43ae-a33c-ffb87ea77adb" config-ref="Salesforce_Config">
+			<salesforce:salesforce-query ><![CDATA[SELECT Name from Account WHERE patientid__c=':id']]></salesforce:salesforce-query>
+			<salesforce:parameters ><![CDATA[#[output application/java
+---
+{
+	id : attributes.uriParams.id
+}]]]></salesforce:parameters>
+		</salesforce:query>
+		<ee:transform doc:name="Transform Message" doc:id="0814e7ca-5a69-47e0-862e-c27e435ed608" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	Name : payload.Name
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="postpatient" doc:id="7188ff98-5e6c-4429-8cc0-72f77ffd6a74" >
+		<ee:transform doc:name="Transform Message" doc:id="f654cdbe-40b6-4581-9ae4-54e29f071b3b" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+[{
+	patientid__c: payload.id,
+	Name: payload.name.use,
+	BillingCity: payload.address.city,
+	BillingState: payload.address.state,
+	BillingPostalCode: payload.address.postalCode,
+	Phone: payload.telecom.value
+}]
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<salesforce:upsert doc:name="Upsert" doc:id="de9f8b00-50bc-4cb1-a321-075230286af1" config-ref="Salesforce_Config" objectType="Account" externalIdFieldName="patientid__c"/>
+		<ee:transform doc:name="Transform Message" doc:id="3898093f-7138-41ba-9235-86774b6a6ecd" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
